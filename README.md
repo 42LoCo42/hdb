@@ -2,7 +2,6 @@
 1. Create a database
 ```bash
 $ mkdir users
-$ hdb users init
 ```
 2. Enter some data
 ```bash

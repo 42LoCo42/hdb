@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DBROOT=".hdbroot"
-
 die() {
 	echo "$@" >&2
 	exit 1
@@ -17,23 +15,13 @@ validatePath() {
 	sed "s|^/*||" <<< "$1"
 }
 
-cmd_init() {
-	if [ -f "$DBROOT" ]; then
-		die "DB already initialized."
-	elif (($(find . -mindepth 1 | wc -c) > 0)); then
-		die "Directory not empty; DB creation unsafe!"
-	else
-		touch "$DBROOT"
-	fi
-}
-
 cmd_get() {
 	(($# < 1)) && usage "<path>"
 	path="$(validatePath "$1")"
 
 	if [ -d "$path" ]; then
 		echo "$path is a directory with entries: "
-		find "$path" -mindepth 1 -maxdepth 1 -not -name "$DBROOT"
+		find "$path" -mindepth 1 -maxdepth 1
 		exit 1
 	else
 		cat "$path"
@@ -43,9 +31,6 @@ cmd_get() {
 cmd_set() {
 	(($# < 2)) && usage "<path> <mode: f or d>"
 	path="$(validatePath "$1")"
-
-	# don't overwrite $DBROOT
-	grep -q "^$DBROOT" <<< "$path" && die "Path can not be DB-root: $DBROOT"
 
 	case "$2" in
 		f) cat - > "$path" ;;
@@ -93,7 +78,6 @@ main() {
 		cd "$1"
 		runCmd="$2"
 		shift 2
-		[ "$runCmd" != "init" ] && [ ! -f "$DBROOT" ] && die "Not in DB: $DBROOT not found!"
 		"cmd_$runCmd" "$@"
 	fi
 }
